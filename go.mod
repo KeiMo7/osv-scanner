@@ -5,6 +5,7 @@ go 1.27.3
 require (
 	charm.land/glamour/v2 v2.0.1
 	charm.land/lipgloss/v2 v2.0.6
+	deps.dev/util/resolve v0.0.0-20260914234406-fe0055f3c598
 	github.com/BurntSushi/toml v1.6.0
 	github.com/CycloneDX/cyclonedx-go v0.12.0
 	github.com/gkampitakis/go-snaps v0.5.25
@@ -25,6 +26,7 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	github.com/urfave/cli/v3 v3.14.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.7
+	golang.org/x/sys v0.50.0
 	golang.org/x/term v0.48.0
 	golang.org/x/vuln v1.6.0
 	google.golang.org/grpc v1.85.0
@@ -41,7 +43,6 @@ require (
 	deps.dev/api/v3alpha v0.0.0-20261013100046-7bac2db56a63 // indirect
 	deps.dev/util/maven v0.0.0-20261013100046-7bac2db56a63 // indirect
 	deps.dev/util/pypi v0.0.0-20260727054525-2946ae4a6141 // indirect
-	deps.dev/util/resolve v0.0.0-20260914234406-fe0055f3c598 // indirect
 	deps.dev/util/semver v0.0.0-20260928000106-0e158e8db197 // indirect
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5 // indirect
 	github.com/Microsoft/go-winio v0.6.3-0.20251027160822-ad3df93bed29 // indirect
@@ -196,7 +197,6 @@ require (
 	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
-	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/telemetry v0.0.0-20261009151841-97e8ea77aa2a // indirect
 	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/time v0.15.0 // indirect

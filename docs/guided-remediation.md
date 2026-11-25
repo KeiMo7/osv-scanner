@@ -621,6 +621,56 @@ The non-interactive mode, in combination with [other flags](#remediation-flags),
 
 Check out our [sample Python script](https://github.com/google/osv-scanner/blob/main/scripts/examples/auto_guided_remediation.py) that uses `osv-scanner fix` to remediate as many vulnerabilities as possible in an npm project without failing your project's `npm run test`.
 
+## Reviewable plans and transactional apply
+
+For automation that needs a human review or a rollback boundary, generate a plan before changing any project files:
+
+```bash
+# Generate a plan and print per-file unified diffs.
+# The original manifest and lockfile are not modified.
+osv-scanner fix plan \
+  --strategy=relax \
+  -M path/to/package.json \
+  --plan-out fix-plan.json
+
+# Equivalent flag form on the existing fix command:
+osv-scanner fix --dry-run --strategy=relax -M path/to/package.json \
+  --plan-out fix-plan.json
+
+# Review the machine-readable comparison between two plans.
+osv-scanner fix compare plan-a.json plan-b.json
+
+# Apply the reviewed plan only after content hashes are revalidated.
+osv-scanner fix apply --plan fix-plan.json
+
+# Recover an apply process that was interrupted.
+osv-scanner fix recover
+```
+
+Plans record target file hashes, complete proposed contents, target versions, fixed vulnerability IDs, and the data source selected for each dependency. Applying the same plan more than once is idempotent.
+
+Before writing, `fix apply` checks that every target file still has either its generated before hash or its planned after hash. Any other content causes the whole apply to be rejected without overwriting files. Writes are staged in a transaction directory under the user cache (override with `--state-dir` or `OSV_SCANNER_FIX_STATE_DIR`), and a failed file write rolls all target files back to their pre-apply bytes. If the process is killed, rerun `fix apply` or `fix recover`; the pending journal restores the consistent pre-apply state. If automatic recovery is impossible, the error gives the exact transaction/backup directory and manual recovery steps.
+
+Two `fix apply` processes using the same state directory are serialized by a non-blocking lock; the later process fails with `APPLY_LOCKED` rather than racing writes.
+
+## Ordered data sources and fallback
+
+`--data-source` retains its historical one-source behavior. It can also contain an ordered comma-separated list; source order is priority order:
+
+```bash
+osv-scanner fix plan -L package-lock.json \
+  --data-source deps.dev,native
+```
+
+The repeatable `--source` / `--sources` flag is equivalent:
+
+```bash
+osv-scanner fix plan -L package-lock.json \
+  --source deps.dev --source native
+```
+
+A package is pinned to the first source that provides usable version-graph data for that package, so one dependency's graph is never assembled from multiple sources. The plan records the selected source and fallback reason. An explicit not-found or no-matching-version response moves to the next source; an unavailable source also moves to the next source. If every source is unavailable, plan generation fails and no plan or project-file changes are produced. Credentials in source URLs and authentication headers are redacted from plans, output, and returned errors.
+
 ## Interactive mode
 
 Interactive mode provides a step-by-step process to understand and fix vulnerabilities in your project.
@@ -760,6 +810,8 @@ The following flag may be used to limit the patches allowed for your dependencie
 By default, we use the [deps.dev API](https://docs.deps.dev/api/) to find version and dependency information of packages during remediation.
 
 If instead you'd like to use your ecosystem's native registry API (e.g. `https://registry.npmjs.org`), you can use the `--data-source=native` flag. `osv-scanner fix` will attempt to use the authentication specified by the native tooling (e.g. `npm config` or Maven's `settings.xml`)
+
+Multiple sources can be supplied in priority order, for example `--data-source=deps.dev,native`; see [Reviewable plans and transactional apply](#ordered-data-sources-and-fallback) for fallback and provenance semantics.
 
 {: .highlight }
 If your project uses mirrored or private registries, you will need to use `--data-source=native`
